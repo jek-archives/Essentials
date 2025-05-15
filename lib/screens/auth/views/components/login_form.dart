@@ -29,7 +29,7 @@ class _LogInFormState extends State<LogInForm> {
             onSaved: (email) {
               _email = email;
             },
-            validator: emaildValidator,
+            validator: emaildValidator.call,
             textInputAction: TextInputAction.next,
             keyboardType: TextInputType.emailAddress,
             decoration: InputDecoration(
@@ -57,7 +57,7 @@ class _LogInFormState extends State<LogInForm> {
             onSaved: (password) {
               _password = password;
             },
-            validator: passwordValidator,
+            validator: passwordValidator.call,
             obscureText: true,
             decoration: InputDecoration(
               hintText: "Password",

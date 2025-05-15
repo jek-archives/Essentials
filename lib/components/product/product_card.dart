@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/product_model.dart';
+import '../../screens/product/views/product_details_screen.dart';
 
 class ProductCard extends StatelessWidget {
   const ProductCard({
@@ -11,51 +12,73 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: () {
-        // Handle navigation or other actions
+    return GestureDetector(
+      onTap: () {
+        // Navigate to ProductDetailsScreen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductDetailsScreen(
+              name: product.title,
+              price: product.price,
+              imagePath: product.image,
+              category: product.category,
+              sizes: product.sizes,
+            ),
+          ),
+        );
       },
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size(140, 220),
-        maximumSize: const Size(140, 220),
-        padding: const EdgeInsets.all(8),
-      ),
-      child: Column(
-        children: [
-          // Product Image
-          AspectRatio(
-            aspectRatio: 1.15,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Product Image
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
               child: Image.asset(
-                product.image, // Load image from assets
-                fit: BoxFit.cover,
+                product.image,
+                height: 140,
                 width: double.infinity,
-                height: double.infinity,
+                fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
+                    height: 140,
                     color: Colors.grey[200],
                     child: const Center(
-                      child: Icon(Icons.image_not_supported, color: Colors.grey),
+                      child:
+                          Icon(Icons.image_not_supported, color: Colors.grey),
                     ),
                   );
                 },
               ),
             ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Brand Name
                   Text(
                     product.brandName.toUpperCase(),
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium!
-                        .copyWith(fontSize: 10),
+                    style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[600],
+                        ),
                   ),
                   const SizedBox(height: 4),
 
@@ -64,27 +87,27 @@ class ProductCard extends StatelessWidget {
                     product.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleSmall!
-                        .copyWith(fontSize: 12),
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
-                  const Spacer(),
+                  const SizedBox(height: 8),
 
                   // Product Price
                   Text(
                     "₱${product.price.toStringAsFixed(2)}",
                     style: const TextStyle(
                       color: Color(0xFF31B0D8),
-                      fontWeight: FontWeight.w500,
-                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

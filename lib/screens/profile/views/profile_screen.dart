@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:shop/components/list_tile/divider_list_tile.dart';
 import 'package:shop/constants.dart';
 import 'package:shop/route/screen_export.dart';
+import '../../../models/user.dart';
 
 import 'components/profile_card.dart';
 import 'components/profile_menu_item_list_tile.dart';
@@ -12,14 +13,14 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = User();
     return Scaffold(
       body: ListView(
         children: [
           ProfileCard(
-            name: "Jake",
-            email: "quejada.jakelloyd@gmail.com",
-            imageSrc: "https://i.imgur.com/dGhy3Pb.jpeg",
-              
+            name: user.name,
+            email: user.email,
+            imageSrc: user.imageUrl,
             press: () {
               Navigator.pushNamed(context, userInfoScreenRoute);
             },

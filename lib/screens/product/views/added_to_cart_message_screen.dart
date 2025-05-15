@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shop/constants.dart';
-import 'package:shop/route/screen_export.dart';
+// Import HomeScreen
 
 class AddedToCartMessageScreen extends StatelessWidget {
   const AddedToCartMessageScreen({super.key});
@@ -10,7 +9,7 @@ class AddedToCartMessageScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: defaultPadding),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Column(
             children: [
               const Spacer(),
@@ -22,13 +21,13 @@ class AddedToCartMessageScreen extends StatelessWidget {
               ),
               const Spacer(flex: 2),
               Text(
-                "Added to cart",
+                "Added to Cart",
                 style: Theme.of(context)
                     .textTheme
                     .headlineSmall!
                     .copyWith(fontWeight: FontWeight.w500),
               ),
-              const SizedBox(height: defaultPadding / 2),
+              const SizedBox(height: 16),
               const Text(
                 "Click the checkout button to complete the purchase process.",
                 textAlign: TextAlign.center,
@@ -36,13 +35,17 @@ class AddedToCartMessageScreen extends StatelessWidget {
               const Spacer(flex: 2),
               OutlinedButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, entryPointScreenRoute);
+                  // Navigate back to the HomeScreen without recreating it
+                  Navigator.popUntil(context, (route) => route.isFirst);
                 },
-                child: const Text("Continue shopping"),
+                child: const Text("Continue Shopping"),
               ),
-              const SizedBox(height: defaultPadding),
+              const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  // Navigate to CartScreen (if implemented)
+                  Navigator.pushNamed(context, '/cart');
+                },
                 child: const Text("Checkout"),
               ),
               const Spacer(),
