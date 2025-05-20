@@ -29,42 +29,78 @@ List<CategoryModel> demoCategories = [
 ];
 // End For Preview
 
+const List<String> kCategories = ['Souvenirs', 'Uniforms', 'Essentials'];
+const List<IconData> kCategoryIcons = [
+  Icons.card_giftcard, // Souvenirs
+  Icons.checkroom,     // Uniforms
+  Icons.book,          // Essentials
+];
+
 class Categories extends StatelessWidget {
+  final int selectedIndex;
+  final ValueChanged<int> onCategorySelected;
+  final List<String> categories;
+  final List<IconData> icons;
+
   const Categories({
     super.key,
+    required this.selectedIndex,
+    required this.onCategorySelected,
+    required this.categories,
+    required this.icons,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          ...List.generate(
-            demoCategories.length,
-            (index) => Padding(
-              padding: EdgeInsets.only(
-                  left: index == 0 ? defaultPadding : defaultPadding / 2,
-                  right:
-                      index == demoCategories.length - 1 ? defaultPadding : 0),
-              child: CategoryBtn(
-                category: demoCategories[index].name,
-                svgSrc: demoCategories[index].svgSrc,
-                isActive: index == 0,
-                press: () {
-                  if (demoCategories[index].route != null) {
-                    Navigator.pushNamed(context, demoCategories[index].route!);
-                  }
-                },
-              ),
-            ),
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmall = screenWidth < 400;
+    final isLarge = screenWidth > 700;
+
+    final double chipHeight = isSmall ? 40 : isLarge ? 60 : 50;
+    final double iconSize = isSmall ? 14 : isLarge ? 24 : 18;
+    final double fontSize = isSmall ? 10 : isLarge ? 16 : 12;
+    final double horizontalPadding = isSmall ? 6 : isLarge ? 20 : 12;
+    final double verticalPadding = isSmall ? 8 : isLarge ? 20 : 16;
+
+    return SizedBox(
+      height: chipHeight + verticalPadding * 2,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: categories.length,
+        itemBuilder: (context, index) => Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: horizontalPadding,
+            vertical: verticalPadding,
           ),
-        ],
+          child: ChoiceChip(
+            label: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icons[index],
+                  size: iconSize,
+                  color: selectedIndex == index
+                      ? Colors.white
+                      : Theme.of(context).iconTheme.color,
+                ),
+                SizedBox(width: isSmall ? 3 : 6),
+                Text(
+                  categories[index],
+                  style: TextStyle(fontSize: fontSize),
+                ),
+              ],
+            ),
+            selected: selectedIndex == index,
+            showCheckmark: false,
+            onSelected: (selected) {
+              if (selected) onCategorySelected(index);
+            },
+          ),
+        ),
       ),
     );
   }
 }
-
 
 class CategoryBtn extends StatelessWidget {
   const CategoryBtn({

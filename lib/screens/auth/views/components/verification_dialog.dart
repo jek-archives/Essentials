@@ -36,7 +36,7 @@ class VerificationDialog extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'A verification link has been sent to:',
+              'A verification link has been sent.',
               style: TextStyle(
                 fontSize: 16,
                 color: Color(0xFF4A4A4A),

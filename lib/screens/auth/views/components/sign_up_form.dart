@@ -28,9 +28,15 @@ class _SignUpFormState extends State<SignUpForm> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final FocusNode _passwordFocusNode = FocusNode();
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   Future<void> _register() async {
     if (!widget.formKey.currentState!.validate()) return;
@@ -70,11 +76,12 @@ class _SignUpFormState extends State<SignUpForm> {
           email: _emailController.text,
           token: responseData['token'], // Store the token if provided
         );
+        final emailForDialog = _emailController.text;
         showDialog(
           context: context,
           barrierDismissible: false,
           builder: (context) => VerificationDialog(
-            email: _emailController.text,
+            email: emailForDialog,
           ),
         );
         _firstNameController.clear();
@@ -133,6 +140,7 @@ class _SignUpFormState extends State<SignUpForm> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -192,6 +200,7 @@ class _SignUpFormState extends State<SignUpForm> {
           const SizedBox(height: 16),
           TextFormField(
             controller: _passwordController,
+            focusNode: _passwordFocusNode,
             obscureText: _obscurePassword,
             decoration: InputDecoration(
               hintText: "Password",
@@ -213,6 +222,9 @@ class _SignUpFormState extends State<SignUpForm> {
               }
               if (value.length < 8) {
                 return 'Password must be at least 8 characters';
+              }
+              if (!RegExp(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}\$').hasMatch(value)) {
+                return 'Min 8 chars, 1 letter, 1 number';
               }
               return null;
             },
