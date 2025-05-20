@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class PasswordRecoveryScreen extends StatefulWidget {
   const PasswordRecoveryScreen({super.key});
@@ -18,27 +20,56 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
     super.dispose();
   }
 
-  void _handleSubmit() {
+  Future<void> _handleSubmit() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
-
-      // Simulate API call
-      Future.delayed(const Duration(seconds: 2), () {
+      try {
+        final response = await http.post(
+          Uri.parse('http://localhost:8000/api/auth/password-reset/'),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({'email': _emailController.text}),
+        );
+        if (!mounted) return;
+        final resp = json.decode(utf8.decode(response.bodyBytes));
+        if (response.statusCode == 200) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Check your email'),
+              content: Text(resp['message'] ?? 'If this email is registered, a password reset link has been sent.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(resp['error'] ?? 'Failed to send password reset email.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Connection error. Please try again.'),
+            backgroundColor: Color(0xFFF44336),
+          ),
+        );
+      } finally {
         if (mounted) {
           setState(() {
             _isLoading = false;
           });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Password reset link sent to your email'),
-              backgroundColor: Colors.green,
-            ),
-          );
         }
-      });
+      }
     }
   }
 

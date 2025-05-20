@@ -81,3 +81,6 @@ final emaildValidator = MultiValidator([
 ]);
 
 const pasNotMatchErrorText = "passwords do not match";
+
+const String apiUrl = 'http://localhost:8000/api'; // For web development
+// const String apiUrl = 'http://127.0.0.1:8000/api'; // For iOS simulator

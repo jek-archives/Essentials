@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 import '../../../models/user.dart';
+import '../../../constants.dart';
 
 class UserInfoScreen extends StatefulWidget {
-  const UserInfoScreen({Key? key}) : super(key: key);
+  const UserInfoScreen({super.key});
 
   @override
   State<UserInfoScreen> createState() => _UserInfoScreenState();
@@ -17,17 +20,20 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
   late TextEditingController phoneController;
   late TextEditingController genderController;
   late TextEditingController emailController;
+  String? _selectedGender;
   bool _isEditing = false;
+  bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    nameController = TextEditingController(text: user.name);
-    dobController = TextEditingController(text: user.dob);
-    phoneController = TextEditingController(text: user.phone);
-    genderController = TextEditingController(text: user.gender);
-    emailController = TextEditingController(text: user.email);
+    nameController = TextEditingController(text: user.name ?? '');
+    dobController = TextEditingController(text: user.dob ?? '');
+    phoneController = TextEditingController(text: user.phone ?? '');
+    genderController = TextEditingController(text: user.gender ?? '');
+    emailController = TextEditingController(text: user.email ?? '');
+    _selectedGender = user.gender;
   }
 
   @override
@@ -40,15 +46,68 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     setState(() {
-      user.name = nameController.text;
-      user.dob = dobController.text;
-      user.phone = phoneController.text;
-      user.gender = genderController.text;
-      user.email = emailController.text;
-      _isEditing = false;
+      _isLoading = true;
     });
+
+    try {
+      // Split name into first and last name
+      final nameParts = nameController.text.split(' ');
+      final firstName = nameParts.first;
+      final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+
+      // Prepare the data
+      final data = {
+        'first_name': firstName,
+        'last_name': lastName,
+        'dob': dobController.text,
+        'phone': phoneController.text,
+        'gender': _selectedGender ?? '',
+      };
+
+      // If there's a new image, add it to the data
+      if (user.imageUrl != null && user.imageUrl!.startsWith('/')) {
+        final imageFile = File(user.imageUrl!);
+        final imageBytes = await imageFile.readAsBytes();
+        final base64Image = base64Encode(imageBytes);
+        data['image'] = 'data:image/jpeg;base64,$base64Image';
+      }
+
+      // Make the API call
+      final response = await http.put(
+        Uri.parse('$apiUrl/profile/update/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${user.token}', // Assuming you store the token in the User model
+        },
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        // Update local user data
+        final responseData = jsonDecode(response.body);
+        user.updateFromMap(responseData);
+        
+        setState(() {
+          _isEditing = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile updated successfully')),
+        );
+      } else {
+        throw Exception('Failed to update profile');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating profile: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _pickImage() async {
@@ -97,9 +156,11 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                   onTap: _isEditing ? _pickImage : null,
                   child: CircleAvatar(
                     radius: 32,
-                    backgroundImage: user.imageUrl.startsWith('/')
-                        ? FileImage(File(user.imageUrl)) as ImageProvider
-                        : AssetImage(user.imageUrl),
+                    backgroundImage: (user.imageUrl != null && user.imageUrl!.startsWith('/'))
+                        ? FileImage(File(user.imageUrl!)) as ImageProvider
+                        : (user.imageUrl != null && user.imageUrl!.isNotEmpty)
+                            ? AssetImage(user.imageUrl!)
+                            : const AssetImage('assets/images/profile.jpg'),
                     child: _isEditing
                         ? Container(
                             decoration: BoxDecoration(
@@ -124,7 +185,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                             ),
                           )
-                        : Text(user.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        : Text((user.name == null || user.name!.isEmpty) ? 'Not set' : user.name!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                     _isEditing
                         ? SizedBox(
                             width: 180,
@@ -134,17 +195,17 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                               style: const TextStyle(color: Colors.grey),
                             ),
                           )
-                        : Text(user.email, style: const TextStyle(color: Colors.grey)),
+                        : Text((user.email == null || user.email!.isEmpty) ? 'Not set' : user.email!, style: const TextStyle(color: Colors.grey)),
                   ],
                 ),
               ],
             ),
             const SizedBox(height: 32),
-            _buildInfoRow('Name', nameController, user.name, _isEditing),
-            _buildInfoRow('Date of birth', dobController, user.dob, _isEditing),
-            _buildInfoRow('Phone number', phoneController, user.phone, _isEditing),
-            _buildInfoRow('Gender', genderController, user.gender, _isEditing),
-            _buildInfoRow('Email', emailController, user.email, _isEditing),
+            _buildInfoRow('Name', nameController, user.name ?? '', _isEditing),
+            _buildDatePickerRow('Date of birth', dobController, user.dob ?? '', _isEditing),
+            _buildPhoneRow('Phone number', phoneController, user.phone ?? '', _isEditing),
+            _buildGenderDropdownRow('Gender', _selectedGender, _isEditing),
+            _buildInfoRow('Email', emailController, user.email ?? '', _isEditing),
             _buildPasswordRow(context),
           ],
         ),
@@ -168,7 +229,113 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                     style: const TextStyle(fontWeight: FontWeight.w500),
                   ),
                 )
-              : Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
+              : Text(user.getDisplayValue(value), style: const TextStyle(fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDatePickerRow(String label, TextEditingController controller, String value, bool isEditing) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey)),
+          isEditing
+              ? SizedBox(
+                  width: 180,
+                  child: GestureDetector(
+                    onTap: () async {
+                      DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: controller.text.isNotEmpty ? DateTime.parse(controller.text) : DateTime(2000),
+                        firstDate: DateTime(1900),
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) {
+                        controller.text = picked.toIso8601String().split('T')[0];
+                        setState(() {});
+                      }
+                    },
+                    child: AbsorbPointer(
+                      child: TextField(
+                        controller: controller,
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          isDense: true,
+                          hintText: 'YYYY-MM-DD',
+                        ),
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ),
+                )
+              : Text(user.getDisplayValue(value), style: const TextStyle(fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPhoneRow(String label, TextEditingController controller, String value, bool isEditing) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey)),
+          isEditing
+              ? SizedBox(
+                  width: 180,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: controller,
+                        keyboardType: TextInputType.phone,
+                        decoration: const InputDecoration(border: InputBorder.none, isDense: true),
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                      const Text(
+                        'Needs verification',
+                        style: TextStyle(fontSize: 10, color: Colors.orange),
+                      ),
+                    ],
+                  ),
+                )
+              : Text(user.getDisplayValue(value), style: const TextStyle(fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGenderDropdownRow(String label, String? selectedGender, bool isEditing) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey)),
+          isEditing
+              ? SizedBox(
+                  width: 180,
+                  child: DropdownButtonFormField<String>(
+                    value: selectedGender?.isNotEmpty == true ? selectedGender : null,
+                    items: const [
+                      DropdownMenuItem(value: 'Male', child: Text('Male')),
+                      DropdownMenuItem(value: 'Female', child: Text('Female')),
+                      DropdownMenuItem(value: 'Other', child: Text('Other')),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedGender = value;
+                      });
+                    },
+                    decoration: const InputDecoration(border: InputBorder.none, isDense: true),
+                    style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.black),
+                  ),
+                )
+              : Text(user.getDisplayValue(selectedGender ?? ''), style: const TextStyle(fontWeight: FontWeight.w500)),
         ],
       ),
     );

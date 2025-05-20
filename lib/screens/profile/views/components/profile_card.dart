@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shop/components/network_image_with_loader.dart';
-
+import '../../../../models/user.dart';
 import '../../../../constants.dart';
 
 class ProfileCard extends StatelessWidget {
@@ -17,26 +17,29 @@ class ProfileCard extends StatelessWidget {
     this.isShowArrow = true,
   });
 
-  final String name, email, imageSrc;
+  final String? name, email, imageSrc;
   final String proLableText;
   final bool isPro, isShowHi, isShowArrow;
   final VoidCallback? press;
 
   @override
   Widget build(BuildContext context) {
+    final user = User();
     return ListTile(
       onTap: press,
       leading: CircleAvatar(
         radius: 28,
         child: NetworkImageWithLoader(
-          imageSrc,
+          imageSrc ?? '',
           radius: 100,
         ),
       ),
       title: Row(
         children: [
           Text(
-            isShowHi ? "Hi, $name" : name,
+            isShowHi 
+                ? "Hi, ${user.getDisplayValue(name)}" 
+                : user.getDisplayValue(name),
             style: const TextStyle(fontWeight: FontWeight.w500),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -65,7 +68,7 @@ class ProfileCard extends StatelessWidget {
             ),
         ],
       ),
-      subtitle: Text(email),
+      subtitle: Text(user.getDisplayValue(email)),
       trailing: isShowArrow
           ? SvgPicture.asset(
               "assets/icons/miniRight.svg",
