@@ -6,6 +6,7 @@ import 'dart:convert';
 import '../../../models/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import '../../../models/cart.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -66,9 +67,13 @@ class _LoginScreenState extends State<LoginScreen> {
         _isLoading = true;
       });
       try {
+        print('DEBUG: Attempting login with email: ${_emailController.text}');
         final response = await http.post(
-          Uri.parse('http://localhost:8000/api/auth/login/'),
-          headers: {'Content-Type': 'application/json'},
+          Uri.parse('${apiBaseUrl}/auth/login/'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
           body: json.encode({
             'email': _emailController.text,
             'password': _passwordController.text,
@@ -76,13 +81,32 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         if (!mounted) return;
         final resp = json.decode(utf8.decode(response.bodyBytes));
+        print('DEBUG: Login response: $resp');
         if (response.statusCode == 200) {
+          // Save token to User singleton
+          User().token = resp['token'];
+          print('DEBUG: Token saved to User singleton: ${resp['token']}');
+
+          // Save token to SharedPreferences
+          if (!kIsWeb) {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('auth_token', resp['token']);
+            print('DEBUG: Token saved to SharedPreferences: ${resp['token']}');
+            print('DEBUG: All SharedPreferences keys after login: ${prefs.getKeys()}');
+            
+            // Verify token was saved
+            final savedToken = prefs.getString('auth_token');
+            print('DEBUG: Verified saved token: $savedToken');
+          }
+
           // Update the User singleton with login info
           User().updateFromRegistration(
             firstName: resp['user']['first_name'] ?? '',
             lastName: resp['user']['last_name'] ?? '',
             email: resp['user']['email'] ?? '',
+            token: resp['token'],
           );
+          print('DEBUG: User singleton updated with token: ${User().token}');
 
           // Save or clear credentials based on Remember Me
           if (!kIsWeb) {
@@ -96,10 +120,18 @@ class _LoginScreenState extends State<LoginScreen> {
             }
           }
 
+          // Load saved cart for the user
+          await Cart().loadCartForUser(resp['user']['email']);
+          print('DEBUG: Loaded saved cart for user ${resp['user']['email']}');
+
+          if (!mounted) return;
+
+          // Navigate to home screen
           Navigator.pushNamedAndRemoveUntil(
-              context,
-              entryPointScreenRoute,
-              ModalRoute.withName(logInScreenRoute));
+            context,
+            entryPointScreenRoute,
+            (route) => false,
+          );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -109,6 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
       } catch (e) {
+        print('DEBUG: Login error: $e');
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -125,9 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     }
   }
-  
 
-  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -290,12 +321,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: _isLoading
                                 ? const CircularProgressIndicator(color: Colors.white)
                                 : const Text(
-                              'SIGN IN',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                                    'SIGN IN',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                           ),
                         ),
                       ],

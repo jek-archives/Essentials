@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../../../constants.dart';
 
 class PasswordResetScreen extends StatefulWidget {
   final String token;
@@ -23,8 +24,11 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
     setState(() => _isLoading = true);
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:8000/api/auth/reset-password/${widget.token}/'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('${apiBaseUrl}/auth/reset-password/${widget.token}/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         body: json.encode({
           'password': _passwordController.text,
           'confirm_password': _confirmPasswordController.text,
@@ -35,13 +39,14 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
       if (response.statusCode == 200) {
         showDialog(
           context: context,
+          barrierDismissible: false,
           builder: (context) => AlertDialog(
             title: const Text('Success'),
             content: const Text('Your password has been reset. You can now log in.'),
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  Navigator.of(context).pop(); // Close dialog
                   Navigator.of(context).pop(); // Go back to login
                 },
                 child: const Text('OK'),
@@ -50,18 +55,34 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
           ),
         );
       } else {
+        String errorMessage = 'Failed to reset password.';
+        if (resp is Map<String, dynamic>) {
+          if (resp.containsKey('error')) {
+            errorMessage = resp['error'];
+          } else if (resp.containsKey('detail')) {
+            errorMessage = resp['detail'];
+          } else if (resp.containsKey('message')) {
+            errorMessage = resp['message'];
+          }
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(resp['error'] ?? 'Failed to reset password.'),
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
           ),
         );
       }
     } catch (e) {
       if (!mounted) return;
+      String errorMessage = 'Connection error. Please try again.';
+      if (e.toString().contains('Connection refused')) {
+        errorMessage = 'Cannot connect to server. Please check if the server is running.';
+      } else if (e.toString().contains('SocketException')) {
+        errorMessage = 'Network error. Please check your internet connection.';
+      }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Connection error. Please try again.'),
+        SnackBar(
+          content: Text(errorMessage),
           backgroundColor: Colors.red,
         ),
       );

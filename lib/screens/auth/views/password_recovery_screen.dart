@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../../../constants.dart';
 
 class PasswordRecoveryScreen extends StatefulWidget {
   const PasswordRecoveryScreen({super.key});
@@ -27,8 +28,11 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
       });
       try {
         final response = await http.post(
-          Uri.parse('http://localhost:8000/api/auth/password-reset/'),
-          headers: {'Content-Type': 'application/json'},
+          Uri.parse('${apiBaseUrl}/auth/password-reset/'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
           body: json.encode({'email': _emailController.text}),
         );
         if (!mounted) return;
@@ -36,31 +40,51 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
         if (response.statusCode == 200) {
           showDialog(
             context: context,
+            barrierDismissible: false,
             builder: (context) => AlertDialog(
               title: const Text('Check your email'),
               content: Text(resp['message'] ?? 'If this email is registered, a password reset link has been sent.'),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close dialog
+                    Navigator.of(context).pop(); // Go back to login
+                  },
                   child: const Text('OK'),
                 ),
               ],
             ),
           );
         } else {
+          String errorMessage = 'Failed to send password reset email.';
+          if (resp is Map<String, dynamic>) {
+            if (resp.containsKey('error')) {
+              errorMessage = resp['error'];
+            } else if (resp.containsKey('detail')) {
+              errorMessage = resp['detail'];
+            } else if (resp.containsKey('message')) {
+              errorMessage = resp['message'];
+            }
+          }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(resp['error'] ?? 'Failed to send password reset email.'),
+              content: Text(errorMessage),
               backgroundColor: Colors.red,
             ),
           );
         }
       } catch (e) {
         if (!mounted) return;
+        String errorMessage = 'Connection error. Please try again.';
+        if (e.toString().contains('Connection refused')) {
+          errorMessage = 'Cannot connect to server. Please check if the server is running.';
+        } else if (e.toString().contains('SocketException')) {
+          errorMessage = 'Network error. Please check your internet connection.';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Connection error. Please try again.'),
-            backgroundColor: Color(0xFFF44336),
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
           ),
         );
       } finally {

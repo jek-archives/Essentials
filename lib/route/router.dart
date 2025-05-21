@@ -29,10 +29,12 @@ Route<dynamic> generateRoute(RouteSettings settings) {
         builder: (context) {
           final args = settings.arguments as Map<String, dynamic>;
           return ProductDetailsScreen(
+            id: args['id'],
             name: args['name'],
             price: args['price'],
             imagePath: args['imagePath'],
             category: args['category'],
+            sizes: args['sizes'],
           );
         },
       );

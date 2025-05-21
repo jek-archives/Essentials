@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:form_field_validator/form_field_validator.dart';
+import 'utils/validators.dart';
 
 // Just for demo
 const productDemoImg1 = "https://i.imgur.com/CGCyp1d.png";
@@ -68,19 +69,7 @@ const double defaultPadding = 16.0;
 const double defaultBorderRadious = 12.0;
 const Duration defaultDuration = Duration(milliseconds: 300);
 
-final passwordValidator = MultiValidator([
-  RequiredValidator(errorText: 'Password is required'),
-  MinLengthValidator(8, errorText: 'password must be at least 8 digits long'),
-  PatternValidator(r'(?=.*?[#?!@$%^&*-])',
-      errorText: 'passwords must have at least one special character')
-]);
-
-final emaildValidator = MultiValidator([
-  RequiredValidator(errorText: 'Email is required'),
-  EmailValidator(errorText: "Enter a valid email address"),
-]);
-
 const pasNotMatchErrorText = "passwords do not match";
 
-const String apiUrl = 'http://localhost:8000/api'; // For web development
+const String apiBaseUrl = 'http://localhost:8000/api'; // For web development
 // const String apiUrl = 'http://127.0.0.1:8000/api'; // For iOS simulator

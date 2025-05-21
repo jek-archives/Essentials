@@ -1,15 +1,100 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:shop/components/list_tile/divider_list_tile.dart';
-import 'package:shop/constants.dart';
-import 'package:shop/route/screen_export.dart';
+import '../../../components/list_tile/divider_list_tile.dart';
+import '../../../constants.dart';
+import '../../../route/screen_export.dart';
+import '../../../route/route_constants.dart';
 import '../../../models/user.dart';
+import '../../../models/cart.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 import 'components/profile_card.dart';
 import 'components/profile_menu_item_list_tile.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
+
+  Future<void> _handleLogout(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        // Save cart before clearing user data
+        final user = User();
+        if (user.email != null) {
+          try {
+            await Cart().saveCartForUser(user.email!);
+            print('DEBUG: Successfully saved cart for user ${user.email}');
+          } catch (cartError) {
+            print('DEBUG: Error saving cart: $cartError');
+            // Continue with logout even if cart save fails
+          }
+        }
+
+        // Clear user data
+        final prefs = await SharedPreferences.getInstance();
+        await Future.wait([
+          prefs.remove('auth_token'),
+          prefs.remove('user_email'),
+          prefs.remove('user_name'),
+          prefs.remove('user_id'),
+          prefs.remove('remember_me'),
+          prefs.remove('remembered_email'),
+          prefs.remove('remembered_password'),
+        ]);
+        print('DEBUG: Cleared user data from SharedPreferences');
+        
+        // Clear user singleton
+        user.token = null;
+        user.name = null;
+        user.email = null;
+        user.imageUrl = null;
+        print('DEBUG: Cleared user singleton data');
+        
+        // Clear cart
+        Cart().clearCart();
+        print('DEBUG: Cleared cart from memory');
+        
+        print('DEBUG: User logged out successfully');
+        
+        // Navigate to login screen and remove all previous routes
+        if (context.mounted) {
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            logInScreenRoute,
+            (route) => false,
+          );
+        }
+      } catch (e) {
+        print('DEBUG: Error during logout: $e');
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error during logout. Please try again.'),
+              backgroundColor: errorColor,
+            ),
+          );
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -143,7 +228,7 @@ class ProfileScreen extends StatelessWidget {
 
           // Log Out
           ListTile(
-            onTap: () {},
+            onTap: () => _handleLogout(context),
             minLeadingWidth: 24,
             leading: SvgPicture.asset(
               "assets/icons/Logout.svg",

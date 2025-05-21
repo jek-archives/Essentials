@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shop/screens/product/views/added_to_cart_message_screen.dart';
-import 'package:shop/models/cart.dart'; // Import the Cart class
+import 'package:shop/models/cart.dart';
 import 'package:shop/models/product_model.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
+  final int id;
   final String name;
   final double price;
   final String imagePath;
@@ -12,6 +13,7 @@ class ProductDetailsScreen extends StatefulWidget {
 
   const ProductDetailsScreen({
     super.key,
+    required this.id,
     required this.name,
     required this.price,
     required this.imagePath,
@@ -24,7 +26,27 @@ class ProductDetailsScreen extends StatefulWidget {
 }
 
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
-  String? _selectedSize; // To store the selected size
+  String? _selectedSize;
+  final Cart _cart = Cart();
+
+  void _addToCart() {
+    _cart.addItem(ProductModel(
+      id: widget.id,
+      image: widget.imagePath,
+      title: widget.name,
+      brandName: "USTP",
+      category: widget.category,
+      price: widget.price,
+      sizes: [_selectedSize!],
+    ));
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AddedToCartMessageScreen(),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -145,28 +167,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _selectedSize == null
-                      ? null // Disable button if no size is selected
-                      : () {
-                          // Add the product to the cart
-                          Cart.cartItems.add(ProductModel(
-                            image: widget.imagePath,
-                            title: widget.name,
-                            brandName: "USTP", // Replace with actual brand
-                            category: widget.category,
-                            price: widget.price,
-                            sizes: [_selectedSize!],
-                          ));
-
-                          // Navigate to AddedToCartMessageScreen
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const AddedToCartMessageScreen(),
-                            ),
-                          );
-                        },
+                  onPressed: _selectedSize == null ? null : _addToCart,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4A4A4A),
                     padding: const EdgeInsets.symmetric(vertical: 16),

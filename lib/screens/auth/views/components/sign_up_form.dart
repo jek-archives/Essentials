@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'verification_dialog.dart';
 import '../../../../models/user.dart';
+import '../../../../utils/validators.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../constants.dart';
 import '../../../../route/route_constants.dart';
@@ -38,6 +40,17 @@ class _SignUpFormState extends State<SignUpForm> {
     super.initState();
   }
 
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _passwordFocusNode.dispose();
+    super.dispose();
+  }
+
   Future<void> _register() async {
     if (!widget.formKey.currentState!.validate()) return;
 
@@ -49,7 +62,7 @@ class _SignUpFormState extends State<SignUpForm> {
     try {
       print('Attempting to register with email: ${_emailController.text}');
       final response = await http.post(
-        Uri.parse('$apiUrl/auth/register/'),
+        Uri.parse('${apiBaseUrl}/auth/register/'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -74,8 +87,13 @@ class _SignUpFormState extends State<SignUpForm> {
           firstName: _firstNameController.text,
           lastName: _lastNameController.text,
           email: _emailController.text,
-          token: responseData['token'], // Store the token if provided
+          token: responseData['token'],
         );
+        if (responseData['token'] != null) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('auth_token', responseData['token']);
+          print('DEBUG: Token saved to SharedPreferences: ${responseData['token']}');
+        }
         final emailForDialog = _emailController.text;
         showDialog(
           context: context,
@@ -134,17 +152,6 @@ class _SignUpFormState extends State<SignUpForm> {
   }
 
   @override
-  void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    _passwordFocusNode.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Form(
       key: widget.formKey,
@@ -157,12 +164,7 @@ class _SignUpFormState extends State<SignUpForm> {
               hintText: "First Name",
               prefixIcon: Icon(Icons.person_outline),
             ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your first name';
-              }
-              return null;
-            },
+            validator: nameValidator.call,
           ),
           const SizedBox(height: 16),
           TextFormField(
@@ -172,12 +174,7 @@ class _SignUpFormState extends State<SignUpForm> {
               hintText: "Last Name",
               prefixIcon: Icon(Icons.person_outline),
             ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your last name';
-              }
-              return null;
-            },
+            validator: nameValidator.call,
           ),
           const SizedBox(height: 16),
           TextFormField(
@@ -187,15 +184,7 @@ class _SignUpFormState extends State<SignUpForm> {
               hintText: "Email address",
               prefixIcon: Icon(Icons.email_outlined),
             ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your email';
-              }
-              if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                return 'Please enter a valid email';
-              }
-              return null;
-            },
+            validator: emailValidator.call,
           ),
           const SizedBox(height: 16),
           TextFormField(
@@ -216,18 +205,7 @@ class _SignUpFormState extends State<SignUpForm> {
                 },
               ),
             ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your password';
-              }
-              if (value.length < 8) {
-                return 'Password must be at least 8 characters';
-              }
-              if (!RegExp(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}\$').hasMatch(value)) {
-                return 'Min 8 chars, 1 letter, 1 number';
-              }
-              return null;
-            },
+            validator: passwordValidator.call,
           ),
           const SizedBox(height: 16),
           TextFormField(
@@ -247,15 +225,7 @@ class _SignUpFormState extends State<SignUpForm> {
                 },
               ),
             ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please confirm your password';
-              }
-              if (value != _passwordController.text) {
-                return 'Passwords do not match';
-              }
-              return null;
-            },
+            validator: (value) => confirmPasswordValidator(value, _passwordController.text),
           ),
           const SizedBox(height: 24),
           SizedBox(

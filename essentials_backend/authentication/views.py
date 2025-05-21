@@ -16,6 +16,7 @@ from django.template import loader
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
 
 # Create your views here.
 
@@ -49,8 +50,11 @@ def login_view(request):
     user = authenticate(username=user.username, password=password)
     if user is not None:
         login(request, user)
+        # Get or create token for the user
+        token, _ = Token.objects.get_or_create(user=user)
         return Response({
             'message': 'Login successful',
+            'token': token.key,
             'user': {
                 'id': user.id,
                 'email': user.email,
@@ -292,4 +296,21 @@ def update_profile_view(request):
         'date_of_birth': user.date_of_birth,
         'phone_number': user.phone_number,
         'gender': user.gender,
+    })
+
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_profile_view(request):
+    user = request.user
+    return Response({
+        'id': user.id,
+        'email': user.email,
+        'username': user.username,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'date_of_birth': user.date_of_birth,
+        'phone_number': user.phone_number,
+        'gender': user.gender,
+        'image': user.image.url if hasattr(user, 'image') and user.image else None,
     })
