@@ -159,11 +159,6 @@ EMAIL_TIMEOUT = 10
 # Token settings
 VERIFICATION_TOKEN_EXPIRY = 24  # hours
 
-# Twilio settings
-TWILIO_ACCOUNT_SID = 'ACc2155accc80db25439a6a269e8f5f1a0'
-TWILIO_AUTH_TOKEN = 'd795727097dfbdccfe64693b05445cf6'
-TWILIO_PHONE_NUMBER = '+639660549751'
-
 # Cache settings
 CACHES = {
     'default': {
