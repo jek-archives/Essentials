@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 urlpatterns = [
@@ -9,4 +9,7 @@ urlpatterns = [
     path('reset-password/<uuid:token>/', views.password_reset_confirm_view, name='password-reset-confirm'),
     path('profile/', views.get_profile_view, name='profile'),
     path('profile/update/', views.update_profile_view, name='profile-update'),
+    path('phone/send-verification/', views.send_phone_verification, name='send-phone-verification'),
+    path('phone/verify/', views.verify_phone_number, name='verify-phone'),
 ]
+

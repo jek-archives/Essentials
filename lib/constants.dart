@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:form_field_validator/form_field_validator.dart';
 import 'utils/validators.dart';
 
-// Just for demo
-const productDemoImg1 = "https://i.imgur.com/CGCyp1d.png";
-const productDemoImg2 = "https://i.imgur.com/AkzWQuJ.png";
-const productDemoImg3 = "https://i.imgur.com/J7mGZ12.png";
-const productDemoImg4 = "https://i.imgur.com/q9oF9Yq.png";
-const productDemoImg5 = "https://i.imgur.com/MsppAcx.png";
-const productDemoImg6 = "https://i.imgur.com/JfyZlnO.png";
+// Product images
+const productImg1 = "assets/images/products/product1.png";
+const productImg2 = "assets/images/products/product2.png";
+const productImg3 = "assets/images/products/product3.png";
+const productImg4 = "assets/images/products/product4.png";
+const productImg5 = "assets/images/products/product5.png";
+const productImg6 = "assets/images/products/product6.png";
 
 // End For demo
 

@@ -7,6 +7,7 @@ import '../../../models/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../../models/cart.dart';
+import '../../../services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -86,6 +87,9 @@ class _LoginScreenState extends State<LoginScreen> {
           // Save token to User singleton
           User().token = resp['token'];
           print('DEBUG: Token saved to User singleton: ${resp['token']}');
+
+          // Set token in ApiService for authenticated requests
+          ApiService().setAuthToken(resp['token']);
 
           // Save token to SharedPreferences
           if (!kIsWeb) {

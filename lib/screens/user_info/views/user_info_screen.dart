@@ -26,6 +26,9 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
   bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
   String? _tempImagePath;
+  bool _isVerifyingPhone = false;
+  String? _verificationCode;
+  bool _isPhoneVerified = false;
 
   @override
   void initState() {
@@ -526,9 +529,32 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                         decoration: const InputDecoration(border: InputBorder.none, isDense: true),
                         style: const TextStyle(fontWeight: FontWeight.w500),
                       ),
-                      const Text(
-                        'Needs verification',
-                        style: TextStyle(fontSize: 10, color: Colors.orange),
+                      Row(
+                        children: [
+                          Text(
+                            _isPhoneVerified ? 'Verified' : 'Needs verification',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: _isPhoneVerified ? Colors.green : Colors.orange,
+                            ),
+                          ),
+                          if (!_isPhoneVerified)
+                            TextButton(
+                              onPressed: _isVerifyingPhone ? null : _sendVerificationCode,
+                              child: _isVerifyingPhone
+                                  ? const SizedBox(
+                                      width: 12,
+                                      height: 12,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Verify',
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                            ),
+                        ],
                       ),
                     ],
                   ),
@@ -583,6 +609,163 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
               // Handle change password
             },
             child: const Text('Change Password', style: TextStyle(color: Colors.purple)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _sendVerificationCode() async {
+    if (phoneController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a phone number first'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Format phone number to E.164 format
+    String phoneNumber = phoneController.text;
+    if (!phoneNumber.startsWith('+')) {
+      phoneNumber = '+63${phoneNumber.startsWith('0') ? phoneNumber.substring(1) : phoneNumber}';
+    }
+
+    print('DEBUG: Sending verification code to phone number: $phoneNumber');
+
+    setState(() {
+      _isVerifyingPhone = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('$apiBaseUrl/auth/phone/send-verification/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Token ${user.token}',
+        },
+        body: jsonEncode({
+          'phone_number': phoneNumber,
+        }),
+      );
+
+      print('DEBUG: Send verification response status: ${response.statusCode}');
+      print('DEBUG: Send verification response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Verification code sent successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          _showVerificationDialog();
+        }
+      } else {
+        final errorData = jsonDecode(response.body);
+        throw Exception(errorData['error'] ?? 'Failed to send verification code');
+      }
+    } catch (e) {
+      print('DEBUG: Error sending verification code: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isVerifyingPhone = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _verifyPhoneNumber() async {
+    if (_verificationCode == null || _verificationCode!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter the verification code'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('$apiBaseUrl/auth/phone/verify/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Token ${user.token}',
+        },
+        body: jsonEncode({
+          'phone_number': phoneController.text,
+          'verification_code': _verificationCode,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        setState(() {
+          _isPhoneVerified = responseData['user']['is_phone_verified'];
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Phone number verified successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context); // Close the verification dialog
+        }
+      } else {
+        final errorData = jsonDecode(response.body);
+        throw Exception(errorData['error'] ?? 'Failed to verify phone number');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showVerificationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Enter Verification Code'),
+        content: TextField(
+          keyboardType: TextInputType.number,
+          maxLength: 6,
+          decoration: const InputDecoration(
+            hintText: 'Enter 6-digit code',
+            counterText: '',
+          ),
+          onChanged: (value) {
+            _verificationCode = value;
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: _verifyPhoneNumber,
+            child: const Text('Verify'),
           ),
         ],
       ),

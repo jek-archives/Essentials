@@ -1,18 +1,57 @@
 class ProductModel {
   final int id;
-  final String image, brandName, title, category;
+  final String image;
+  final String title;
+  final String brandName;
+  final String category;
   final double price;
-  final List<String>? sizes; // Added sizes property
+  final List<String> sizes;
+  final int stockQuantity;
+  final int reorderLevel;
+  final String stockStatus;
 
   ProductModel({
     required this.id,
     required this.image,
-    required this.brandName,
     required this.title,
+    required this.brandName,
     required this.category,
     required this.price,
-    this.sizes,
+    required this.sizes,
+    this.stockQuantity = 0,
+    this.reorderLevel = 10,
+    this.stockStatus = 'in_stock',
   });
+
+  factory ProductModel.fromJson(Map<String, dynamic> json) {
+    return ProductModel(
+      id: json['id'],
+      image: json['image'],
+      title: json['title'],
+      brandName: json['brand_name'],
+      category: json['category']['name'],
+      price: double.parse(json['price'].toString()),
+      sizes: List<String>.from(json['sizes'] ?? []),
+      stockQuantity: json['stock_quantity'] ?? 0,
+      reorderLevel: json['reorder_level'] ?? 10,
+      stockStatus: json['stock_status'] ?? 'in_stock',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'image': image,
+      'title': title,
+      'brand_name': brandName,
+      'category': category,
+      'price': price,
+      'sizes': sizes,
+      'stock_quantity': stockQuantity,
+      'reorder_level': reorderLevel,
+      'stock_status': stockStatus,
+    };
+  }
 }
 
 List<ProductModel> products = [

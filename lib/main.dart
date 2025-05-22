@@ -2,8 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:shop/route/route_constants.dart';
 import 'package:shop/route/router.dart' as router;
 import 'package:shop/theme/app_theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'services/api_service.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('auth_token');
+  if (token != null) {
+    ApiService().setAuthToken(token);
+  }
   runApp(const MyApp());
 }
 

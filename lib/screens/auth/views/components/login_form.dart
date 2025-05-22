@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../constants.dart';
 import '../../../../route/route_constants.dart';
 import '../../../../models/cart.dart';
+import '../../../../services/api_service.dart';
 
 class LogInForm extends StatefulWidget {
   const LogInForm({
@@ -81,6 +82,9 @@ class _LogInFormState extends State<LogInForm> {
           // Verify token was saved
           final savedToken = prefs.getString('auth_token');
           print('DEBUG: Verified saved token: $savedToken');
+
+          // Set token in ApiService for authenticated requests
+          ApiService().setAuthToken(token);
 
           // Load saved cart for the user
           await Cart().loadCartForUser(responseData['user']['email']);

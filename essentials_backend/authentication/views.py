@@ -17,6 +17,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
+from django.core.cache import cache
+import random
+from twilio.rest import Client
+from twilio.base.exceptions import TwilioRestException
 
 # Create your views here.
 
@@ -313,4 +317,75 @@ def get_profile_view(request):
         'phone_number': user.phone_number,
         'gender': user.gender,
         'image': user.image.url if hasattr(user, 'image') and user.image else None,
+    })
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def send_phone_verification(request):
+    phone_number = request.data.get('phone_number')
+    if not phone_number:
+        return Response({'error': 'Phone number is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Generate a 6-digit verification code
+        verification_code = '123456'  # Fixed code for testing
+        print(f"DEBUG: Generated verification code: {verification_code}")
+        
+        # Store the code in cache with 10-minute expiration
+        cache_key = f'phone_verification_{phone_number}'
+        cache.set(cache_key, verification_code, 600)  # 600 seconds = 10 minutes
+        print(f"DEBUG: Stored verification code in cache with key: {cache_key}")
+        
+        return Response({
+            'message': 'Verification code sent successfully',
+            'verification_code': verification_code  # Only for testing! Remove in production
+        })
+    except Exception as e:
+        print(f"DEBUG: Error: {str(e)}")
+        return Response({
+            'error': f'An error occurred: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def verify_phone_number(request):
+    phone_number = request.data.get('phone_number')
+    verification_code = request.data.get('verification_code')
+    
+    if not phone_number or not verification_code:
+        return Response({
+            'error': 'Phone number and verification code are required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Get stored verification code
+    cache_key = f'phone_verification_{phone_number}'
+    stored_code = cache.get(cache_key)
+    
+    if not stored_code:
+        return Response({
+            'error': 'Verification code has expired. Please request a new one.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    if verification_code != stored_code:
+        return Response({
+            'error': 'Invalid verification code'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Update user's phone number and mark it as verified
+    user = request.user
+    user.phone_number = phone_number
+    user.is_phone_verified = True
+    user.save()
+    
+    # Clear the verification code from cache
+    cache.delete(cache_key)
+    
+    return Response({
+        'message': 'Phone number verified successfully',
+        'user': {
+            'phone_number': user.phone_number,
+            'is_phone_verified': user.is_phone_verified
+        }
     })

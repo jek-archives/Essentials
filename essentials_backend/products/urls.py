@@ -1,7 +1,12 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
 
+router = DefaultRouter()
+router.register(r'categories', views.CategoryViewSet)
+router.register(r'products', views.ProductViewSet)
+# router.register(r'pickup-locations', views.PickupLocationViewSet)  # Removed to avoid duplicate
+
 urlpatterns = [
-    path('', views.product_list, name='product-list'),
-    path('<int:pk>/', views.product_detail, name='product-detail'),
+    path('', include(router.urls)),
 ] 
