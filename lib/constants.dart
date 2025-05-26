@@ -71,5 +71,45 @@ const Duration defaultDuration = Duration(milliseconds: 300);
 
 const pasNotMatchErrorText = "passwords do not match";
 
-const String apiBaseUrl = 'http://localhost:8000/api'; // For web development
+const String apiBaseUrl = 'http://10.0.2.2:8000/api'; // For Android emulator
 // const String apiUrl = 'http://127.0.0.1:8000/api'; // For iOS simulator
+
+class AppConstants {
+  // API Configuration
+  static const String apiUrl = String.fromEnvironment(
+    'API_URL',
+    defaultValue: 'http://10.0.2.2:8000/api',
+  );
+
+  // App Configuration
+  static const String appName = 'Essentials USTP';
+  static const String appVersion = '1.0.0';
+  
+  // Theme Configuration
+  static const double defaultPadding = 16.0;
+  static const double defaultBorderRadius = 8.0;
+  
+  // Animation Durations
+  static const Duration defaultAnimationDuration = Duration(milliseconds: 300);
+  
+  // Error Messages
+  static const String networkError = 'Network error occurred. Please check your connection.';
+  static const String serverError = 'Server error occurred. Please try again later.';
+  static const String authError = 'Authentication failed. Please login again.';
+  
+  // Success Messages
+  static const String orderSuccess = 'Order placed successfully!';
+  static const String loginSuccess = 'Login successful!';
+  
+  // Validation Messages
+  static const String requiredField = 'This field is required';
+  static const String invalidEmail = 'Please enter a valid email address';
+  static const String invalidPassword = 'Password must be at least 8 characters';
+  
+  // Placeholder Images
+  static const String placeholderImage = 'assets/images/placeholder.png';
+  
+  // Default Values
+  static const int defaultQuantity = 1;
+  static const String defaultSize = 'M';
+}

@@ -2,13 +2,15 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/product_model.dart';
 import '../models/pickup_location_model.dart';
+import '../constants.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
   ApiService._internal();
 
-  static const String baseUrl = 'http://localhost:8000/api';
+  // Use the API URL from constants
+  static String get baseUrl => AppConstants.apiUrl;
   String? _authToken; // Add this for authentication
 
   // Set auth token
@@ -27,43 +29,68 @@ class ApiService {
 
   // Products
   Future<List<ProductModel>> getProducts() async {
-    final response = await http.get(Uri.parse('$baseUrl/products/'));
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      return data.map((json) => ProductModel.fromJson(json)).toList();
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/products/'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => ProductModel.fromJson(json)).toList();
+      }
+      throw Exception('Failed to load products: ${response.statusCode}');
+    } catch (e) {
+      throw Exception('Network error: $e');
     }
-    throw Exception('Failed to load products');
   }
 
   Future<ProductModel> getProduct(int id) async {
-    final response = await http.get(Uri.parse('$baseUrl/products/$id/'));
-    if (response.statusCode == 200) {
-      return ProductModel.fromJson(json.decode(response.body));
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/products/$id/'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        return ProductModel.fromJson(json.decode(response.body));
+      }
+      throw Exception('Failed to load product: ${response.statusCode}');
+    } catch (e) {
+      throw Exception('Network error: $e');
     }
-    throw Exception('Failed to load product');
   }
 
   // Pickup Locations
   Future<List<PickupLocation>> getPickupLocations() async {
-    final response = await http.get(Uri.parse('$baseUrl/pickup-locations/'));
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      return data.map((json) => PickupLocation.fromJson(json)).toList();
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/pickup-locations/'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => PickupLocation.fromJson(json)).toList();
+      }
+      throw Exception('Failed to load pickup locations: ${response.statusCode}');
+    } catch (e) {
+      throw Exception('Network error: $e');
     }
-    throw Exception('Failed to load pickup locations');
   }
 
   // Stock Management
   Future<ProductModel> updateStock(int productId, int quantity) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/products/$productId/update_stock/'),
-      headers: _headers,
-      body: json.encode({'quantity': quantity}),
-    );
-    if (response.statusCode == 200) {
-      return ProductModel.fromJson(json.decode(response.body));
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/products/$productId/update_stock/'),
+        headers: _headers,
+        body: json.encode({'quantity': quantity}),
+      );
+      if (response.statusCode == 200) {
+        return ProductModel.fromJson(json.decode(response.body));
+      }
+      throw Exception('Failed to update stock: ${response.statusCode}');
+    } catch (e) {
+      throw Exception('Network error: $e');
     }
-    throw Exception('Failed to update stock');
   }
 
   // Order Placement
@@ -73,23 +100,27 @@ class ApiService {
     required String size,
     required double price,
   }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/orders/'),
-      headers: _headers,
-      body: json.encode({
-        'items': [
-          {
-            'product': productId,
-            'quantity': quantity,
-            'price': price,
-          }
-        ],
-      }),
-    );
-    
-    if (response.statusCode == 201) {
-      return true;
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/orders/'),
+        headers: _headers,
+        body: json.encode({
+          'items': [
+            {
+              'product': productId,
+              'quantity': quantity,
+              'price': price,
+            }
+          ],
+        }),
+      );
+      
+      if (response.statusCode == 201) {
+        return true;
+      }
+      throw Exception('Failed to place order: ${response.body}');
+    } catch (e) {
+      throw Exception('Network error: $e');
     }
-    throw Exception('Failed to place order: ${response.body}');
   }
 } 

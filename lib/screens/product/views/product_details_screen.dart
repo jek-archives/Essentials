@@ -159,15 +159,15 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> with Single
       await _buttonController.forward();
       await _buttonController.reverse();
       
-      _cart.addItem(ProductModel(
-        id: widget.id,
-        image: widget.imagePath,
-        title: widget.name,
-        brandName: "USTP",
-        category: widget.category,
-        price: widget.price,
-        sizes: [_selectedSize!],
-      ));
+    _cart.addItem(ProductModel(
+      id: widget.id,
+      image: widget.imagePath,
+      title: widget.name,
+      brandName: "USTP",
+      category: widget.category,
+      price: widget.price,
+      sizes: [_selectedSize!],
+    ));
 
       if (mounted) {
         _showToast('Added to cart successfully!', true);
@@ -206,8 +206,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> with Single
 
       if (mounted) {
         Navigator.push(
-          context,
-          MaterialPageRoute(
+      context,
+      MaterialPageRoute(
             builder: (context) => ProductBuyNowScreen(
               id: widget.id,
               name: widget.name,
@@ -334,10 +334,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> with Single
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Product Image
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Product Image
             Stack(
               children: [
                 Container(
@@ -385,23 +385,23 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> with Single
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Product Name and Price
-                  Text(
-                    widget.name,
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '₱${widget.price.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+              Text(
+                widget.name,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '₱${widget.price.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
+              ),
+              const SizedBox(height: 24),
 
                   // Product Description
                   const Text(
@@ -422,7 +422,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> with Single
                   ),
                   const SizedBox(height: 24),
 
-                  // Available Sizes
+              // Available Sizes
                   if (widget.sizes != null && widget.sizes!.isNotEmpty) ...[
                     const Text(
                       'Available Sizes',
@@ -572,10 +572,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> with Single
                                         style: const TextStyle(
                                           fontSize: 12,
                                           color: Colors.grey,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                ),
+              ),
+            ],
+          ),
                                 ),
                               ],
                             ),

@@ -70,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
       try {
         print('DEBUG: Attempting login with email: ${_emailController.text}');
         final response = await http.post(
-          Uri.parse('${apiBaseUrl}/auth/login/'),
+          Uri.parse('${AppConstants.apiUrl}/auth/login/'),
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',

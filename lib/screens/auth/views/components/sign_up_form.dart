@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'verification_dialog.dart';
@@ -8,7 +7,6 @@ import '../../../../utils/validators.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../constants.dart';
-import '../../../../route/route_constants.dart';
 
 class SignUpForm extends StatefulWidget {
   const SignUpForm({

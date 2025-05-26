@@ -19,8 +19,6 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.core.cache import cache
 import random
-from twilio.rest import Client
-from twilio.base.exceptions import TwilioRestException
 
 # Create your views here.
 

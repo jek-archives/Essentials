@@ -37,7 +37,7 @@ class _LogInFormState extends State<LogInForm> {
       try {
         print('DEBUG: Attempting login with email: $_email');
         final response = await http.post(
-          Uri.parse('${apiBaseUrl}/auth/login/'),
+          Uri.parse('${AppConstants.apiUrl}/auth/login/'),
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',

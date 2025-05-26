@@ -1,0 +1,2 @@
+/Users/edwinquejada/Desktop/SchoolStuff/EssentialsUSTP/android/app/.cxx/RelWithDebInfo/234t331x/x86_64/CMakeFiles/edit_cache.dir
+/Users/edwinquejada/Desktop/SchoolStuff/EssentialsUSTP/android/app/.cxx/RelWithDebInfo/234t331x/x86_64/CMakeFiles/rebuild_cache.dir

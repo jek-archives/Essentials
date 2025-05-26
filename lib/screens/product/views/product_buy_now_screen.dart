@@ -185,8 +185,8 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
                 ),
                 const SliverToBoxAdapter(child: Divider()),
                 if (widget.sizes != null && widget.sizes!.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: SelectedSize(
+                SliverToBoxAdapter(
+                  child: SelectedSize(
                       sizes: widget.sizes!,
                       selectedIndex: widget.sizes!.indexOf(_selectedSize ?? widget.sizes![0]),
                       press: (value) {
@@ -194,8 +194,8 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
                           _selectedSize = widget.sizes![value];
                         });
                       },
-                    ),
                   ),
+                ),
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(vertical: defaultPadding),
                   sliver: ProductListTile(
@@ -219,14 +219,14 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
                         : _pickupLocation == null
                             ? const Text('Pickup location is currently unavailable. Please try again later.', style: TextStyle(color: Colors.red))
                             : Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const SizedBox(height: defaultPadding / 2),
-                                  Text(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: defaultPadding / 2),
+                        Text(
                                     "Pickup Location",
-                                    style: Theme.of(context).textTheme.titleSmall,
-                                  ),
-                                  const SizedBox(height: defaultPadding / 2),
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        const SizedBox(height: defaultPadding / 2),
                                   Container(
                                     padding: const EdgeInsets.all(defaultPadding),
                                     decoration: BoxDecoration(
@@ -274,8 +274,8 @@ class _ProductBuyNowScreenState extends State<ProductBuyNowScreen> {
                                       ],
                                     ),
                                   ),
-                                ],
-                              ),
+                      ],
+                    ),
                   ),
                 ),
                 const SliverToBoxAdapter(
